@@ -7,41 +7,48 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.platform.LocalContext
+import com.tokky.neoclone.ui.home.HomeScreen
+import com.tokky.neoclone.ui.home.rememberApkFilePicker
 import com.tokky.neoclone.ui.theme.NeoCloneTheme
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
         setContent {
             NeoCloneTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+                MainContent()
             }
         }
     }
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
+fun MainContent() {
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    NeoCloneTheme {
-        Greeting("Android")
+    val apkPicker = rememberApkFilePicker { uri, fileName ->
+        // APKファイルが選択された時の処理
+        coroutineScope.launch(Dispatchers.IO) {
+            // TODO:ファイル処理の実装
+        }
     }
+
+    Scaffold (modifier = Modifier.fillMaxSize()) { innerPadding ->
+        HomeScreen(
+            modifier = Modifier.padding(innerPadding),
+            onSelectApkClicked = {
+                apkPicker.launch(arrayOf("application/vnd.android.package-archive"))
+            }
+        )
+    }
+
 }
