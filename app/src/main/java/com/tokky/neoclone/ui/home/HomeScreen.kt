@@ -25,11 +25,18 @@ import android.provider.OpenableColumns
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import com.tokky.neoclone.data.apk.ApkProcessor
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.runtime.rememberCoroutineScope
+import com.tokky.neoclone.util.FileUtils
+import kotlinx.coroutines.launch
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -39,15 +46,35 @@ fun HomeScreen(
 ) {
     val context = LocalContext.current
     var selectedFileName by remember { mutableStateOf("ファイルが選択されていません") }
+    var isProcessing by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+
+    val apkProcessor = remember { ApkProcessor(context) }
 
     val apkFileLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument(),
     ) { uri: Uri? ->
         uri?.let {
-            val fileName = getFileName(context, it)
-            selectedFileName = "選択されたファイル: $fileName"
+            // ファイル名を表示
+            val fileName = FileUtils.getFileName(context, it)
+            selectedFileName = "処理中: $fileName"
+            isProcessing = true
 
-            Toast.makeText(context, "ファイルを選択しました: $fileName", Toast.LENGTH_SHORT).show()
+            // コルーチンでAPKファイルを処理
+            coroutineScope.launch {
+                apkProcessor.loadApkFromUri(it).fold(
+                    onSuccess = { file ->
+                        // 成功した場合の処理
+                        selectedFileName = "読み込み完了: $fileName (${file.length()} bytes)"
+                        isProcessing = false
+                    },
+                    onFailure = { error ->
+                        // エラー時の処理
+                        selectedFileName = "エラー: ${error.message}"
+                        isProcessing = false
+                    }
+                )
+            }
         }
     }
 
@@ -73,7 +100,12 @@ fun HomeScreen(
     ) { paddingValues ->
         Column ( modifier = modifier.padding(paddingValues) ) {
             Text("Hello NeoClone!")
+
             Text(selectedFileName)
+
+            if (isProcessing) {
+                CircularProgressIndicator()
+            }
         }
 
     }
