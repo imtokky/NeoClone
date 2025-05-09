@@ -1,24 +1,18 @@
 package com.tokky.neoclone.ui.home
 
-import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.io.File
 
-fun fabFunc() {
-
-}
 
 @Composable
 fun rememberApkFilePicker(onApkSelected: (Uri, String) -> Unit): ManagedActivityResultLauncher<Array<String>, Uri?> {
-    val context = LocalContext.current
+//    val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
     val launcher = rememberLauncherForActivityResult(

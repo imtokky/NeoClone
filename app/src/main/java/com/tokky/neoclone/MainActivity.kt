@@ -44,10 +44,7 @@ fun MainContent() {
 
     Scaffold (modifier = Modifier.fillMaxSize()) { innerPadding ->
         HomeScreen(
-            modifier = Modifier.padding(innerPadding),
-            onSelectApkClicked = {
-                apkPicker.launch(arrayOf("application/vnd.android.package-archive"))
-            }
+            modifier = Modifier.padding(innerPadding)
         )
     }
 

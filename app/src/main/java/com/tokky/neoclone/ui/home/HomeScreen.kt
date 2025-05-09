@@ -19,14 +19,38 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
+import android.content.Context
+import android.net.Uri
+import android.provider.OpenableColumns
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    modifier: Modifier = Modifier,
-    onSelectApkClicked: () -> Unit
+    modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    var selectedFileName by remember { mutableStateOf("ファイルが選択されていません") }
+
+    val apkFileLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument(),
+    ) { uri: Uri? ->
+        uri?.let {
+            val fileName = getFileName(context, it)
+            selectedFileName = "選択されたファイル: $fileName"
+
+            Toast.makeText(context, "ファイルを選択しました: $fileName", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     Scaffold (
         topBar = {
             TopAppBar(
@@ -41,7 +65,7 @@ fun HomeScreen(
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(
-                onClick = { onSelectApkClicked() },
+                onClick = { apkFileLauncher.launch(arrayOf("application/vnd.android.package-archive")) },
                 icon = { Icon(Icons.Filled.Add, "Select a APK file") },
                 text = { Text(text = "Select APK") }
             )
@@ -49,8 +73,22 @@ fun HomeScreen(
     ) { paddingValues ->
         Column ( modifier = modifier.padding(paddingValues) ) {
             Text("Hello NeoClone!")
+            Text(selectedFileName)
         }
 
     }
 
+}
+
+private fun getFileName(context: Context, uri: Uri): String {
+    var result = "unknown"
+    context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+        if (cursor.moveToFirst()) {
+            val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+            if (nameIndex != -1) {
+                result = cursor.getString(nameIndex)
+            }
+        }
+    }
+    return result
 }
